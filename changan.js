@@ -1,6 +1,7 @@
 /*
  * 脚本名称：长安汽车（changan.js）
  * 功能：自动抓取 token 并执行每日签到
+ * 脚本地址：https://raw.githubusercontent.com/Cradms/Sign/main/changan.js
  *
  * Quantumult X 配置：
  *
@@ -8,19 +9,22 @@
  * hostname = wxapi.uni.changan.com.cn
  *
  * [rewrite_local]
- * # 拦截获取用户信息的请求，执行脚本来保存 token
+ * # 拦截获取用户信息的请求，执行脚本来保存 token。
  * ^https?:\/\/wxapi\.uni\.changan\.com\.cn\/user\/home\/info url script-request-header https://raw.githubusercontent.com/Cradms/Sign/main/changan.js
  *
  * [task_local]
- * # 每天定时执行签到任务
- * 0 0 10 * * ? https://raw.githubusercontent.com/Cradms/Sign/main/changan.js, tag=长安汽车签到
+ * # 每天定时执行签到任务。
+ * # 这里的 cron 表达式表示每天上午 7:17 执行一次。
+ * 17 7 * * * https://raw.githubusercontent.com/Cradms/Sign/main/changan.js, tag=长安汽车签到, img-url=https://raw.githubusercontent.com/Cradms/Sign/main/changan.png
  *
+ * 注意：请确保你的 Quantumult X 已正确设置。
  */
 
 // ====== 加密和签名函数 ======
+// 这些库通常需要被手动包含在脚本头部或通过环境支持
+// 在 QX 中，你可能需要将这些库的纯 JS 代码复制到这里
 const CryptoJS = require('crypto-js');
 const NodeRSA = require('node-rsa'); // 纯JS的RSA库，可能需要在QX中手动引入
-const Base64 = require('base-64');
 
 // 生成16位随机字符串作为AES密钥
 function generate_random_key(length = 16) {
@@ -54,9 +58,16 @@ xpGsKO/pIjrSytZX1bvNA6WIWbGH/an//md/cBXOQvq1hrNsKfwdZWIOgIj1N5MY
 cc7cLPLJToq2XqpP9QIDAQAB
 -----END PUBLIC KEY-----`;
 
-    const rsa = new NodeRSA(public_key, 'pkcs1-public-pem');
-    const encrypted = rsa.encrypt(text, 'base64');
-    return encrypted;
+    // 假设 QX 环境下可以使用 NodeRSA 库
+    try {
+        const rsa = new NodeRSA(public_key, 'pkcs1-public-pem');
+        const encrypted = rsa.encrypt(text, 'base64');
+        return encrypted;
+    } catch (e) {
+        console.log(`RSA 加密失败，请检查 NodeRSA 库是否可用: ${e.message}`);
+        // 可以返回一个占位符，但签到会失败
+        return "rsa_error_placeholder"; 
+    }
 }
 
 // 生成sign，MD5加密paramEncryptedStr参数 + 时间戳 + 固定字符串并转大写
