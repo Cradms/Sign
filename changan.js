@@ -9,11 +9,11 @@
  *
  * [rewrite_local]
  * # 拦截获取用户信息的请求，执行脚本来保存 token
- * ^https?:\/\/wxapi\.uni\.changan\.com\.cn\/user\/home\/info url script-request-header https://raw.githubusercontent.com/cradms/sign/changan.js
+ * ^https?:\/\/wxapi\.uni\.changan\.com\.cn\/user\/home\/info url script-request-header https://raw.githubusercontent.com/Cradms/Sign/refs/heads/main/changan.js
  *
  * [task_local]
  * # 每天定时执行签到任务
- * 0 0 10 * * ? https://raw.githubusercontent.com/cradms/sign/changan.js, tag=长安汽车签到
+ * 0 0 10 * * ? https://raw.githubusercontent.com/Cradms/Sign/refs/heads/main/changan.js, tag=长安汽车签到
  *
  * 注意：请将配置中的 URL 替换为你自己存放脚本的地址。
  */
