@@ -84,3 +84,18 @@ if (body) {
 }
 
 $done({ body });
+********************************************
+# 🔹 Quantumult X - 长安 UNI-V 状态推送脚本
+# 功能：
+# 1️⃣ 当天第一次访问推送
+# 2️⃣ 当天非第一次访问，仅在安全状态或电瓶电压变化时推送
+# 3️⃣ 显示油量、续航、温度、里程、油耗、胎压等信息
+********************************************
+
+[Script]
+# 🚗 长安 UNI-V 安全状态 + 电压变化推送
+http-response ^https:\/\/m\.iov\.changan\.com\.cn\/app2\/api\/car\/data script-path=https://raw.githubusercontent.com/Cradms/Sign/refs/heads/main/changan_status.js, requires-body=true, timeout=60, tag=长安车辆状态
+
+[MITM]
+# 启用 HTTPS 解密
+hostname = m.iov.changan.com.cn
