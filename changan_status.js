@@ -1,9 +1,6 @@
-/**
- * 长安 UNI-V 精简状态通知脚本（当天第一次 + 安全/电压变化触发）
- */
 let body = $response.body;
 let cacheKey = "changan_last_key_status";
-let dateKey = "changan_last_notify_date"; // 用于记录当天日期
+let dateKey = "changan_last_notify_date";
 
 if (body) {
     try {
@@ -11,7 +8,6 @@ if (body) {
         if (obj.code === 0 && obj.success && obj.data) {
             let d = obj.data;
 
-            // 核心状态
             let engineStatus = d.engineStatus === 2 ? "已启动" : "已熄火";
             let mileage = d.totalOdometer;
             let remainMile = d.remainedOilMile;
@@ -26,7 +22,6 @@ if (body) {
             let lr = (d.lrTyrePressure / 100).toFixed(2);
             let rr = (d.rrTyrePressure / 100).toFixed(2);
 
-            // 安全状态
             let doors = [d.leftFrontDoor, d.rightFrontDoor, d.leftRearDoor, d.rightRearDoor];
             let windows = [d.leftFrontDoorrWindow, d.rightFrontDoorrWindow, d.leftRearWindow, d.rightRearWindow, d.sunroof];
             let locks = [d.leftFrontDoorLock, d.rightFrontDoorLock, d.leftRearDoorLock, d.rightRearDoorLock];
@@ -44,36 +39,35 @@ if (body) {
             if (!isTrunkHoodClosed) securityStatus.push("引擎盖/后备箱未关");
             let securityStr = securityStatus.length > 0 ? securityStatus.join(" | ") : "全车锁闭良好 🛡️";
 
-            // 构造关键状态对象
-            let currentKeyStatus = { vol, securityStr };
+            let currentKeyStatus = { vol: vol, securityStr: securityStr };
 
-            // 获取历史状态和日期
             let lastStatusRaw = $prefs.valueForKey(cacheKey);
             let lastStatus = lastStatusRaw ? JSON.parse(lastStatusRaw) : null;
             let lastDate = $prefs.valueForKey(dateKey) || "";
-            let today = new Date().toISOString().split("T")[0];
+            
+            let now = new Date();
+            let today = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
 
             let changed = !lastStatus || JSON.stringify(lastStatus) !== JSON.stringify(currentKeyStatus);
             let pushNotification = false;
 
             if (lastDate !== today) {
-                pushNotification = true;  // 当天第一次访问，总是推送
+                pushNotification = true;
                 $prefs.setValueForKey(today, dateKey);
             } else if (changed) {
-                pushNotification = true;  // 当天非第一次访问，状态变化才推送
+                pushNotification = true;
             }
 
             if (pushNotification) {
                 $prefs.setValueForKey(JSON.stringify(currentKeyStatus), cacheKey);
 
-                let title = `🚗 UNI-V 状态 [${engineStatus}]`;
-                let subtitle = `⛽ 油量: ${fuel}% (续航 ${remainMile} km) | 🔋 电瓶: ${vol}V`;
-                let detail =
-`🌡️ 温度: 车内 ${tempIn}°C / 车外 ${tempOut}°C / 水温 ${waterTemp}°C
-📊 行驶: 总里程 ${mileage} km / 综合油耗 ${consumption} L/100km
-🛞 胎压: 前 ${lf} / ${rf} Bar | 后 ${lr} / ${rr} Bar
-🔒 安防: ${securityStr}
-⏱️ 更新时间: ${d.deviceTime}`;
+                let title = "🚗 UNI-V 状态 [" + engineStatus + "]";
+                let subtitle = "⛽ 油量: " + fuel + "% (续航 " + remainMile + " km) | 🔋 电瓶: " + vol + "V";
+                let detail = "🌡️ 温度: 车内 " + tempIn + "°C / 车外 " + tempOut + "°C / 水温 " + waterTemp + "°C\n" +
+                             "📊 行驶: 总里程 " + mileage + " km / 综合油耗 " + consumption + " L/100km\n" +
+                             "🛞 胎压: 前 " + lf + " / " + rf + " Bar | 后 " + lr + " / " + rr + " Bar\n" +
+                             "🔒 安防: " + securityStr + "\n" +
+                             "⏱️ 更新: " + d.deviceTime;
 
                 $notify(title, subtitle, detail);
             }
@@ -83,19 +77,4 @@ if (body) {
     }
 }
 
-$done({ body });
-********************************************
-# 🔹 Quantumult X - 长安 UNI-V 状态推送脚本
-# 功能：
-# 1️⃣ 当天第一次访问推送
-# 2️⃣ 当天非第一次访问，仅在安全状态或电瓶电压变化时推送
-# 3️⃣ 显示油量、续航、温度、里程、油耗、胎压等信息
-********************************************
-
-[Script]
-# 🚗 长安 UNI-V 安全状态 + 电压变化推送
-http-response ^https:\/\/m\.iov\.changan\.com\.cn\/app2\/api\/car\/data script-path=https://raw.githubusercontent.com/Cradms/Sign/refs/heads/main/changan_status.js, requires-body=true, timeout=60, tag=长安车辆状态
-
-[MITM]
-# 启用 HTTPS 解密
-hostname = m.iov.changan.com.cn
+$done({ body: body });
