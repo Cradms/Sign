@@ -69,7 +69,21 @@ if (body) {
                              "🔒 安防: " + securityStr + "\n" +
                              "⏱️ 更新: " + d.deviceTime;
 
-                $notify(title, subtitle, detail);
+                // 组合副标题和详情作为 Bark 的内容体
+                let barkContent = subtitle + "\n\n" + detail;
+                
+                // 构建 Bark URL，对特殊字符进行转义
+                let barkUrl = "https://api.day.app/WvctmettrQQTXawrRazqiP/" + encodeURIComponent(title) + "/" + encodeURIComponent(barkContent) + "?group=changan";
+
+                // 发起网络请求推送 Bark
+                $task.fetch({
+                    url: barkUrl,
+                    method: "GET"
+                }).then(response => {
+                    console.log("Bark 推送成功");
+                }, reason => {
+                    console.log("Bark 推送失败: " + reason.error);
+                });
             }
         }
     } catch (e) {
@@ -77,4 +91,5 @@ if (body) {
     }
 }
 
+// 请求下发，不做延迟阻挡
 $done({ body: body });
