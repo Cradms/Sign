@@ -1,6 +1,4 @@
 let body = $response.body;
-let cacheKey = "changan_last_key_status";
-let dateKey = "changan_last_notify_date";
 
 if (body) {
     try {
@@ -39,57 +37,29 @@ if (body) {
             if (!isTrunkHoodClosed) securityStatus.push("引擎盖/后备箱未关");
             let securityStr = securityStatus.length > 0 ? securityStatus.join(" | ") : "全车锁闭良好 🛡️";
 
-            let currentKeyStatus = { vol: vol, securityStr: securityStr };
+            let title = "🚗 UNI-V 状态 [" + engineStatus + "]";
+            let subtitle = "⛽ 油量: " + fuel + "% (续航 " + remainMile + " km) | 🔋 电瓶: " + vol + "V";
+            let detail = "🌡️ 温度: 车内 " + tempIn + "°C / 车外 " + tempOut + "°C / 水温 " + waterTemp + "°C\n" +
+                         "📊 行驶: 总里程 " + mileage + " km / 综合油耗 " + consumption + " L/100km\n" +
+                         "🛞 胎压: 前 " + lf + " / " + rf + " Bar | 后 " + lr + " / " + rr + " Bar\n" +
+                         "🔒 安防: " + securityStr + "\n" +
+                         "⏱️ 更新: " + d.deviceTime;
 
-            let lastStatusRaw = $prefs.valueForKey(cacheKey);
-            let lastStatus = lastStatusRaw ? JSON.parse(lastStatusRaw) : null;
-            let lastDate = $prefs.valueForKey(dateKey) || "";
-            
-            let now = new Date();
-            let today = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+            let barkContent = subtitle + "\n\n" + detail;
+            let barkUrl = "https://api.day.app/WvctmettrQQTXawrRazqiP/" + encodeURIComponent(title) + "/" + encodeURIComponent(barkContent) + "?group=changan";
 
-            let changed = !lastStatus || JSON.stringify(lastStatus) !== JSON.stringify(currentKeyStatus);
-            let pushNotification = false;
-
-            if (lastDate !== today) {
-                pushNotification = true;
-                $prefs.setValueForKey(today, dateKey);
-            } else if (changed) {
-                pushNotification = true;
-            }
-
-            if (pushNotification) {
-                $prefs.setValueForKey(JSON.stringify(currentKeyStatus), cacheKey);
-
-                let title = "🚗 UNI-V 状态 [" + engineStatus + "]";
-                let subtitle = "⛽ 油量: " + fuel + "% (续航 " + remainMile + " km) | 🔋 电瓶: " + vol + "V";
-                let detail = "🌡️ 温度: 车内 " + tempIn + "°C / 车外 " + tempOut + "°C / 水温 " + waterTemp + "°C\n" +
-                             "📊 行驶: 总里程 " + mileage + " km / 综合油耗 " + consumption + " L/100km\n" +
-                             "🛞 胎压: 前 " + lf + " / " + rf + " Bar | 后 " + lr + " / " + rr + " Bar\n" +
-                             "🔒 安防: " + securityStr + "\n" +
-                             "⏱️ 更新: " + d.deviceTime;
-
-                // 组合副标题和详情作为 Bark 的内容体
-                let barkContent = subtitle + "\n\n" + detail;
-                
-                // 构建 Bark URL，对特殊字符进行转义
-                let barkUrl = "https://api.day.app/WvctmettrQQTXawrRazqiP/" + encodeURIComponent(title) + "/" + encodeURIComponent(barkContent) + "?group=changan";
-
-                // 发起网络请求推送 Bark
-                $task.fetch({
-                    url: barkUrl,
-                    method: "GET"
-                }).then(response => {
-                    console.log("Bark 推送成功");
-                }, reason => {
-                    console.log("Bark 推送失败: " + reason.error);
-                });
-            }
+            $task.fetch({
+                url: barkUrl,
+                method: "GET"
+            }).then(response => {
+                console.log("Bark 推送成功");
+            }, reason => {
+                console.log("Bark 推送失败: " + reason.error);
+            });
         }
     } catch (e) {
         console.log("长安车辆数据解析异常: " + e);
     }
 }
 
-// 请求下发，不做延迟阻挡
 $done({ body: body });
