@@ -8,7 +8,7 @@ if (body) {
         if (obj.code === 0 && obj.success && obj.data) {
             let d = obj.data;
 
-            let engineStatus = d.engineStatus === 2 ? "已启动" : "已熄火";
+            let engineStatus = d.engineStatus === 1 ? "已启动" : "已熄火";
             let mileage = d.totalOdometer;
             let remainMile = d.remainedOilMile;
             let fuel = d.remainingFuel;
